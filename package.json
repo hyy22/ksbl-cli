@@ -7,6 +7,7 @@
     "ksbl-cli": "src/index.js"
   },
   "license": "MIT",
+  "type": "module",
   "devDependencies": {
     "@commitlint/cli": "^17.5.1",
     "@commitlint/config-conventional": "^17.4.4",
@@ -23,5 +24,12 @@
   },
   "scripts": {
     "prepare": "husky install"
+  },
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "commander": "^10.0.0",
+    "download-git-repo": "^3.0.2",
+    "inquirer": "^9.1.5",
+    "ora": "^6.3.0"
   }
 }
