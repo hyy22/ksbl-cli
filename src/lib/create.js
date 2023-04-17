@@ -66,7 +66,7 @@ export default async function exec(name, setting) {
   await copyFolder({
     target: downloadPath,
     dest: copyDestPath,
-    config: { ...templateConfig, answers },
+    cfg: { ...templateConfig, answers },
     filter: v => v !== templateConfigFile,
     rootPath: downloadPath,
   });
@@ -130,9 +130,9 @@ async function parseTemplateConfig(p) {
 
 /**
  * 复制文件夹
- * @param {{target: string, dest: string, config: object, filter: (v: string) => boolean, rootPath: string}} param0
+ * @param {{target: string, dest: string, cfg: object, filter: (v: string) => boolean, rootPath: string}} param0
  */
-async function copyFolder({ target, dest, config, filter, rootPath }) {
+async function copyFolder({ target, dest, cfg, filter, rootPath }) {
   // 创建文件夹
   await mkdir(dest, { recursive: true });
   // 读取文件列表
@@ -149,7 +149,7 @@ async function copyFolder({ target, dest, config, filter, rootPath }) {
       await copyFolder({
         target: newTargetPath,
         dest: newDestPath,
-        config,
+        cfg,
         filter,
         rootPath,
       });
@@ -157,14 +157,14 @@ async function copyFolder({ target, dest, config, filter, rootPath }) {
     // 文件，进行复制操作
     else if (
       statInfo.isFile() &&
-      needRenderFile(config, newTargetPath, rootPath)
+      needRenderFile(cfg, newTargetPath, rootPath)
     ) {
-      let content = await readFile(newTargetPath, config.encoding);
-      content = content.replaceAll(/<%(.+?)%>/g, (...args) => {
+      let content = await readFile(newTargetPath, cfg.encoding);
+      content = content.replaceAll(config.templateRegExp, (...args) => {
         const key = args[1];
-        return config.answers[key] || args[0];
+        return cfg.answers[key] || args[0];
       });
-      writeFile(newDestPath, content, config.encoding);
+      writeFile(newDestPath, content, cfg.encoding);
     }
     // 默认用copyFile
     else {

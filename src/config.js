@@ -8,5 +8,10 @@ if (!existsSync(configDir)) {
   mkdirSync(configDir, { recursive: true });
 }
 export default {
+  // 配置文件目录
   configDir,
+  // 模版匹配规则
+  templateRegExp: /<%(.+?)%>/g,
+  // 默认排除文件
+  defaultIgnorePath: ['node_modules/**'],
 };

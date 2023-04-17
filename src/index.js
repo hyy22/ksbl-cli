@@ -5,6 +5,7 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import create from './lib/create.js';
 import * as template from './lib/template.js';
+import addTemplateFiles from './lib/addTemplateFiles.js';
 
 // 文件路径
 const __filename__ = fileURLToPath(import.meta.url);
@@ -77,5 +78,24 @@ function buildTemplateCommand() {
   return templateCmd;
 }
 program.addCommand(buildTemplateCommand());
+
+/**
+ * atfs --include src/**
+ * atfs --exclude node_modules/
+ */
+function buildAtfsCommand() {
+  const atfsCmd = new Command('atfs');
+  atfsCmd
+    .description(
+      'generate template.config.mjs files option of template project'
+    )
+    .option('-i, --include <glob...>', 'include files use glob matching')
+    .option('-e, --exclude <glob...>', 'exclude files use glob matching')
+    .action(options => {
+      addTemplateFiles(options.include, options.exclude);
+    });
+  return atfsCmd;
+}
+program.addCommand(buildAtfsCommand());
 
 program.parse(process.argv);
