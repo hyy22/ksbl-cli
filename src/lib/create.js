@@ -66,7 +66,7 @@ export default async function exec(name, setting) {
   await copyFolder({
     target: downloadPath,
     dest: copyDestPath,
-    cfg: { ...templateConfig, answers },
+    cfg: { ...templateConfig, answers: { ...answers, projectName: name } },
     filter: v => v !== templateConfigFile,
     rootPath: downloadPath,
   });
@@ -180,9 +180,7 @@ async function copyFolder({ target, dest, cfg, filter, rootPath }) {
  * @param {string} rootPath 下载根目录
  * @returns {boolean}
  */
-function needRenderFile({ answers, files, exts }, targetPath, rootPath) {
-  // 如果没有回答就不需要
-  if (!answers) return false;
+function needRenderFile({ files, exts }, targetPath, rootPath) {
   // 如果模版提供了文件列表就只替换相关文件
   if (files?.length) {
     return files.some(v => {
