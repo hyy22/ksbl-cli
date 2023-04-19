@@ -38,6 +38,12 @@ Options:
 
 ### 模版管理
 
+设置模版，默认下载`repo`的`master`分支代码，如果需要指定分支需要在 url 后添加`#branch`，如`https://xxx/xxx.git#main`指定下载 main 分支
+
+```bash
+ksbl-cli template set vue3-admin-tem https://xxx/xxx.git
+```
+
 ```
 Usage: ksbl-cli template [options] [command]
 
@@ -67,8 +73,6 @@ Options:
 ```
 
 ## 模版项目
-
-> 由于使用的`download-git-repo`下载代码，现在远程仓库仅支持 github、gitlab、bitbucket 及自建 gitlab 托管
 
 ### 创建模版项目
 

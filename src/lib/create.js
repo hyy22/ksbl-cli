@@ -34,6 +34,8 @@ export default async function exec(name, setting) {
     ).start();
     try {
       await downloadTemplate(templateDownloadUrl, downloadPath);
+      // 移除.git目录
+      await shell(`rm -rf ${downloadPath}/.git`);
       spinner.succeed('template download success');
     } catch (e) {
       spinner.fail('template download fail');
@@ -95,7 +97,7 @@ export default async function exec(name, setting) {
  */
 function downloadTemplate(url, dest) {
   return new Promise((resolve, reject) => {
-    download(url, dest, error => {
+    download(`direct:${url}`, dest, { clone: true }, error => {
       if (error) {
         reject(error);
       } else {
