@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import download from 'download-git-repo';
 import { resolve, extname } from 'path';
 import ora from 'ora';
 import inquirer from 'inquirer';
@@ -33,12 +32,16 @@ export default async function exec(name, setting) {
       `downloading template ${chalk.bgGreenBright(templateName)}`
     ).start();
     try {
+      // 移除已经存在的模版
+      await shell(`rm -rf ${downloadPath}`, true);
+      // 下载
       await downloadTemplate(templateDownloadUrl, downloadPath);
       // 移除.git目录
-      await shell(`rm -rf ${downloadPath}/.git`);
+      await shell(`rm -rf ${downloadPath}/.git`, true);
       spinner.succeed('template download success');
     } catch (e) {
       spinner.fail('template download fail');
+      return;
     }
   }
   /**
@@ -57,7 +60,7 @@ export default async function exec(name, setting) {
   // 校验文件夹是否存在
   if (existsSync(copyDestPath)) {
     if (!setting.force) {
-      console.log(`project is already exist, use -f, --force option`);
+      console.log(`project is already exist, use -f, --force option if sure`);
       return;
     } else {
       await shell(`rm -rf ${copyDestPath}`);
@@ -76,11 +79,11 @@ export default async function exec(name, setting) {
   // 切换工作目录
   process.chdir(name);
   // git初始化
-  if (!setting.notGit) {
+  if (setting.initGit) {
     await shell('git init');
   }
   // 安装依赖
-  if (!setting.notInstall) {
+  if (setting.install) {
     let registryArg = setting.registry ? ` --registry ${setting.registry}` : '';
     let installCode = `${setting.packageManagement}${
       setting.packageManagement === 'yarn' ? '' : ' install'
@@ -96,15 +99,11 @@ export default async function exec(name, setting) {
  * @returns {Promise<any>}
  */
 function downloadTemplate(url, dest) {
-  return new Promise((resolve, reject) => {
-    download(`direct:${url}`, dest, { clone: true }, error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
-  });
+  const [gitUrl, branch = 'master'] = url.split('#');
+  return shell(
+    `git clone --depth 1 --branch ${branch} ${gitUrl} ${dest}`,
+    true
+  );
 }
 
 /**

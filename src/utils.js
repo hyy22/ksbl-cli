@@ -9,18 +9,22 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
  * @param {string} code 命令
  * @returns {Promise}
  */
-export function shell(code) {
-  console.log(chalk.bgGray(`\nrun shell: ${code}`));
-  console.log(chalk.cyanBright(`pwd: ${process.cwd()}`));
+export function shell(code, quiet) {
+  if (!quiet) {
+    console.log(chalk.bgGray(`\nrun shell: ${code}`));
+    console.log(chalk.cyanBright(`pwd: ${process.cwd()}`));
+  }
   return new Promise(resolve => {
     const [cmd, ...args] = code.split(/\s+/);
     const task = spawn(cmd, args);
-    task.stdout.on('data', data => {
-      console.log(data.toString('utf-8'));
-    });
-    task.stderr.on('data', data => {
-      console.log(chalk.red(data.toString('utf-8')));
-    });
+    if (!quiet) {
+      task.stdout.on('data', data => {
+        console.log(data.toString('utf-8'));
+      });
+      task.stderr.on('data', data => {
+        console.log(chalk.red(data.toString('utf-8')));
+      });
+    }
     task.on('close', resolve);
   });
 }

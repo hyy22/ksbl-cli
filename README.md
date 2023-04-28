@@ -13,8 +13,9 @@ Options:
   -h, --help                  display help for command
 
 Commands:
-  create [options] <project>  init new project use preset templates
-  template                    list or edit template
+  create [options] <project>  使用指定模版初始化项目 init new project use preset templates
+  template                    模版管理 list or edit template
+  atfs [options]              为模版项目的template.config.mjs文件生成files选项 generate template.config.mjs files option of template project
   help [command]              display help for command
 ```
 
@@ -23,39 +24,39 @@ Commands:
 ```
 Usage: ksbl-cli create [options] <project>
 
-init new project use preset templates
+使用指定模版初始化项目 init new project use preset templates
 
 Options:
-  -m, --package-management <pkg>  npm or yarn (default: "npm")
-  -r, --registry <registry>       set npm registry (default: "")
-  -n, --not-install               not install dependence (default: false)
-  -N, --not-git                   not init git (default: false)
-  -t, --template <template>       select a template (default: "")
-  -c, --cache                     use template cache, always download template default (default: false)
-  -f, --force                     force generate project even if already exist (default: false)
+  -t, --template <template>       指定模版 select a template
+  -m, --package-management <pkg>  选择一个包管理工具 npm yarn or pnpm (default: "npm")
+  -r, --registry <registry>       设置镜像 set npm registry (default: "")
+  -i, --install                   安装依赖 install dependence (default: false)
+  -I, --init-git                  初始化git仓库 init git (default: false)
+  -c, --cache                     使用已下载好的模版，默认拉取最新 use template cache, always download template default (default: false)
+  -f, --force                     强制初始化项目 force generate project even if already exist (default: false)
   -h, --help                      display help for command
 ```
 
 ### 模版管理
 
-设置模版，默认下载`repo`的`master`分支代码，如果需要指定分支需要在 url 后添加`#branch`，如`https://xxx/xxx.git#main`指定下载 main 分支
+设置模版，默认下载`repo`的`master`分支代码，如果需要指定分支需要在 url 后添加`#branch`，如`git://xxx/xxx.git#main`指定下载 main 分支
 
 ```bash
-ksbl-cli template set vue3-admin-tem https://xxx/xxx.git
+ksbl-cli template set vue3-admin-tem git://xxx/xxx.git#branch
 ```
 
 ```
 Usage: ksbl-cli template [options] [command]
 
-list or edit template
+模版管理 list or edit template
 
 Options:
   -h, --help         display help for command
 
 Commands:
-  ls                 list all templates
-  set <name> <repo>  add or edit template
-  rm <name...>       remove template
+  ls                 显示所有模版 list all templates
+  set <name> <repo>  新增/编辑模版 add or edit template
+  rm <name...>       删除模版 remove template
   help [command]     display help for command
 ```
 
@@ -64,11 +65,11 @@ Commands:
 ```
 Usage: ksbl-cli atfs [options]
 
-generate template.config.mjs files option of template project
+为模版项目的template.config.mjs文件生成files选项 generate template.config.mjs files option of template project
 
 Options:
-  -i, --include <glob...>  include files use glob matching
-  -e, --exclude <glob...>  exclude files use glob matching
+  -i, --include <glob...>  使用glob包含匹配的文件 include files use glob matching
+  -e, --exclude <glob...>  使用glob排除匹配的文件 exclude files use glob matching
   -h, --help               display help for command
 ```
 
