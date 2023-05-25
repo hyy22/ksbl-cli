@@ -16,6 +16,17 @@ import config from '../config.js';
 
 const cm = configManage();
 export default async function exec(name, setting) {
+  // 判断项目是否已存在
+  const copyDestPath = resolve(process.cwd(), name);
+  // 校验文件夹是否存在
+  if (existsSync(copyDestPath)) {
+    if (!setting.force) {
+      console.log(`project is already exist, use -f, --force option if sure`);
+      return;
+    } else {
+      await shell(`rm -rf ${copyDestPath}`);
+    }
+  }
   // 检测是否存在相关模版
   const templateName = setting.template;
   const templateDownloadUrl = cm.get(templateName);
@@ -38,6 +49,11 @@ export default async function exec(name, setting) {
       await downloadTemplate(templateDownloadUrl, downloadPath);
       // 移除.git目录
       await shell(`rm -rf ${downloadPath}/.git`, true);
+      // 判断是否下载完成
+      if (!existsSync(downloadPath)) {
+        spinner.fail('template download fail, ensure template branch name?');
+        return;
+      }
       spinner.succeed('template download success');
     } catch (e) {
       spinner.fail('template download fail');
@@ -56,17 +72,6 @@ export default async function exec(name, setting) {
   /**
    * 复制并替换文件
    */
-  const copyDestPath = resolve(process.cwd(), name);
-  // 校验文件夹是否存在
-  if (existsSync(copyDestPath)) {
-    if (!setting.force) {
-      console.log(`project is already exist, use -f, --force option if sure`);
-      return;
-    } else {
-      await shell(`rm -rf ${copyDestPath}`);
-    }
-  }
-  // 开始复制
   const copySpinner = ora('start copy template files').start();
   await copyFolder({
     target: downloadPath,
@@ -90,6 +95,8 @@ export default async function exec(name, setting) {
     }${registryArg}`;
     await shell(installCode);
   }
+  // 成功提示
+  console.log(chalk.green(`project [${name}] generate success\r`));
 }
 
 /**
@@ -99,7 +106,7 @@ export default async function exec(name, setting) {
  * @returns {Promise<any>}
  */
 function downloadTemplate(url, dest) {
-  const [gitUrl, branch = 'master'] = url.split('#');
+  const [gitUrl, branch = 'main'] = url.split('#');
   return shell(
     `git clone --depth 1 --branch ${branch} ${gitUrl} ${dest}`,
     true
