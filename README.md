@@ -67,6 +67,8 @@ Usage: ksbl-cli atfs [options]
 
 为模版项目的template.config.mjs文件生成files选项 generate template.config.mjs files option of template project
 
+扫描指定目录，根据正则匹配文件内容收集文件，匹配规则默认为/<%(.+?)%>/g，可在config.js调整
+
 Options:
   -i, --include <glob...>  使用glob包含匹配的文件 include files use glob matching
   -e, --exclude <glob...>  使用glob排除匹配的文件 exclude files use glob matching
@@ -101,4 +103,6 @@ export default {
 };
 ```
 
-如果设置了`prompts`且在模版项目中使用了变量占位，使用`ksbl-cli atfs`可以自动给`template.config.mjs`添加`files`配置，作用是指定需要渲染的文件列表，提升速度。如果不设置且设置了`prompts`就会使用`exts`的配置去获取渲染文件列表，如果不设置`exts`，会使用脚本的默认配置。
+如果设置了`prompts`且在模版项目中使用了变量占位，使用`ksbl-cli atfs`命令可以自动给`template.config.mjs`添加`files`配置，作用是指定需要渲染的文件列表，提升速度。如果不设置且设置了`prompts`就会使用`exts`的配置去获取渲染文件列表，如果不设置`exts`，会使用脚本的默认配置。
+
+在`template.config.mjs`配置文件中，可以使用`process.env.DEFAULT_PROJECT_NAME`环境变量获取生成的项目目录名称

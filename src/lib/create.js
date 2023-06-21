@@ -16,6 +16,8 @@ import config from '../config.js';
 
 const cm = configManage();
 export default async function exec(name, setting) {
+  // 设置环境变量
+  process.env.DEFAULT_PROJECT_NAME = name;
   // 判断项目是否已存在
   const copyDestPath = resolve(process.cwd(), name);
   // 校验文件夹是否存在
@@ -76,7 +78,7 @@ export default async function exec(name, setting) {
   await copyFolder({
     target: downloadPath,
     dest: copyDestPath,
-    cfg: { ...templateConfig, answers: { ...answers, projectName: name } },
+    cfg: { ...templateConfig, answers: { projectName: name, ...answers } },
     filter: v => v !== templateConfigFile,
     rootPath: downloadPath,
   });
@@ -106,7 +108,7 @@ export default async function exec(name, setting) {
  * @returns {Promise<any>}
  */
 function downloadTemplate(url, dest) {
-  const [gitUrl, branch = 'main'] = url.split('#');
+  const [gitUrl, branch = 'master'] = url.split('#');
   return shell(
     `git clone --depth 1 --branch ${branch} ${gitUrl} ${dest}`,
     true
@@ -116,12 +118,12 @@ function downloadTemplate(url, dest) {
 /**
  * 解析模版的配置
  * @param {string} p 模版路径
- * @returns {{
+ * @returns {Promise<{
  *  prompts: import('inquirer').Question[],
  *  encoding: string,
  *  files: string[],
  *  exts: string[]
- * }}
+ * }>}
  */
 async function parseTemplateConfig(p) {
   const configs = existsSync(p) ? (await import(p)).default : {};
@@ -132,7 +134,7 @@ async function parseTemplateConfig(p) {
     exts:
       configs.exts && configs.exts.length
         ? configs.exts
-        : ['html', 'js', 'ts', 'tsx', 'vue', 'json', 'py', 'java', 'go'],
+        : ['html', 'css', 'js', 'ts', 'tsx', 'vue', 'json', 'py', 'java', 'go'],
   };
 }
 

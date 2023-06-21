@@ -6,7 +6,7 @@ const cm = configManage();
 export function listTemplates() {
   const temps = cm.get();
   temps.forEach((v, k) => {
-    console.log(`${chalk.bgCyanBright(k)} ${chalk.green(v)}`);
+    console.log(`${chalk.blueBright(k)} ${chalk.green(v)}`);
   });
 }
 // 设置模板
