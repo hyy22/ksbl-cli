@@ -12,6 +12,7 @@ export default async function addTemplateFiles(incs = [], excs = []) {
   const matchFiles = await glob(incs.length ? incs : '**', {
     cwd: pwd,
     nodir: true,
+    dot: true,
     ignore: excs.length
       ? [...excs, ...config.defaultIgnorePath]
       : [...config.defaultIgnorePath],
