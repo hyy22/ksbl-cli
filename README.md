@@ -3,6 +3,12 @@
 project init cli tools
 项目初始化脚手架
 
+## 安装
+
+```bash
+npm i ksbl-cli -g
+```
+
 ## 命令
 
 ```
