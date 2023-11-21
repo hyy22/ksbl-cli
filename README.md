@@ -106,6 +106,8 @@ export default {
   files: ['src/main.js'],
   // 需要脚本批量替换变量的文件扩展名类型，如果配置了files会优先使用files
   exts: ['html', 'js', 'jsx', 'vue', 'tsx'],
+  // 配置模版替换正则
+  regExp: /<%(.+?)%>/g,
 };
 ```
 

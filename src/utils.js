@@ -108,3 +108,11 @@ export function parseJSON(s) {
     return null;
   }
 }
+
+/**
+ * 判断类型
+ */
+export function isType(obj, type) {
+  const typeString = type[0].toUpperCase() + type.slice(1).toLowerCase();
+  return Object.prototype.toString.call(obj) === `[object ${typeString}]`;
+}

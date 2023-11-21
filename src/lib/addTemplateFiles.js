@@ -4,6 +4,7 @@ import { glob } from 'glob';
 import { existsSync } from 'fs';
 import config from '../config.js';
 import { format as prettierFormat } from 'prettier';
+import { isType } from '../utils.js';
 
 // 获取当前路径
 const pwd = process.cwd();
@@ -20,7 +21,11 @@ export default async function addTemplateFiles(incs = [], excs = []) {
   // 配置文件
   const cm = await templateConfig();
   // 获取需要替换的文件列表
-  const renderFiles = await getRenderFiles(matchFiles, cm.get('encoding'));
+  const renderFiles = await getRenderFiles(
+    matchFiles,
+    cm.get('encoding'),
+    cm.get('regExp')
+  );
   // 写入配置文件
   if (renderFiles.length) {
     await cm.set('files', renderFiles);
@@ -32,26 +37,29 @@ export default async function addTemplateFiles(incs = [], excs = []) {
  */
 async function templateConfig() {
   const filepath = resolve(pwd, 'template.config.mjs');
-  const config = existsSync(filepath) ? (await import(filepath)).default : {};
+  const tmpConfig = existsSync(filepath)
+    ? (await import(filepath)).default
+    : {};
   return {
     get(key) {
       const result = {
-        prompts: config.prompts || [],
-        encoding: config.encoding || 'utf8',
-        files: config.files || [],
-        exts: config.exts || [],
+        prompts: tmpConfig.prompts || [],
+        encoding: tmpConfig.encoding || 'utf8',
+        files: tmpConfig.files || [],
+        exts: tmpConfig.exts || [],
+        regExp: tmpConfig.regExp || config.templateRegExp,
       };
       return typeof key === 'string' ? result[key] : result;
     },
     async set(k, v) {
-      config[k] = v;
-      const configString = stringifyWithFunctions(config);
+      tmpConfig[k] = v;
+      const configString = stringifyWithFunctions(tmpConfig);
       return writeFile(
         filepath,
         prettierFormat(`export default ${configString}`, {
           parser: 'babel',
         }),
-        config.encoding || 'utf8'
+        tmpConfig.encoding || 'utf8'
       );
     },
   };
@@ -65,14 +73,16 @@ async function templateConfig() {
 function stringifyWithFunctions(obj) {
   if (Array.isArray(obj)) {
     return `[${obj.map(item => stringifyWithFunctions(item)).join(', ')}]`;
-  } else if (typeof obj === 'object' && obj !== null) {
+  } else if (isType(obj, 'object')) {
     return `{${Object.entries(obj)
       .map(([key, value]) => `${key}: ${stringifyWithFunctions(value)}`)
       .join(', ')}}`;
-  } else if (typeof obj === 'function') {
+  } else if (isType(obj, 'function')) {
     return obj.toString();
-  } else {
+  } else if (isType(obj, 'string')) {
     return JSON.stringify(obj);
+  } else {
+    return obj;
   }
 }
 
@@ -81,14 +91,13 @@ function stringifyWithFunctions(obj) {
  * @param {*} target 目录
  * @returns
  */
-async function getRenderFiles(files = [], encoding = 'utf8') {
+async function getRenderFiles(files = [], encoding = 'utf8', regExp) {
   const lists = [];
   for (const f of files) {
     const content = await readFile(f, encoding);
-    const reg = config.templateRegExp;
-    if (reg.test(content)) {
+    if (regExp.test(content)) {
       lists.push(f);
-      reg.lastIndex = 0; // 重置游标
+      regExp.lastIndex = 0; // 重置游标
     }
   }
   return lists;

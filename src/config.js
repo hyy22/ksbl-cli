@@ -13,5 +13,5 @@ export default {
   // 模版匹配规则
   templateRegExp: /<%(.+?)%>/g,
   // 默认排除文件
-  defaultIgnorePath: ['node_modules/**', 'dist/**'],
+  defaultIgnorePath: ['node_modules/**', 'dist/**', 'template.config.mjs'],
 };

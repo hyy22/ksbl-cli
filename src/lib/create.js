@@ -135,6 +135,7 @@ async function parseTemplateConfig(p) {
       configs.exts && configs.exts.length
         ? configs.exts
         : ['html', 'css', 'js', 'ts', 'tsx', 'vue', 'json', 'py', 'java', 'go'],
+    regExp: configs.regExp || config.templateRegExp,
   };
 }
 
@@ -170,7 +171,7 @@ async function copyFolder({ target, dest, cfg, filter, rootPath }) {
       needRenderFile(cfg, newTargetPath, rootPath)
     ) {
       let content = await readFile(newTargetPath, cfg.encoding);
-      content = content.replaceAll(config.templateRegExp, (...args) => {
+      content = content.replaceAll(cfg.regExp, (...args) => {
         const key = args[1];
         return cfg.answers[key] || args[0];
       });
