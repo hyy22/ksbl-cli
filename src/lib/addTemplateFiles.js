@@ -4,7 +4,10 @@ import { glob } from 'glob';
 import { existsSync } from 'fs';
 import config from '../config.js';
 import { format as prettierFormat } from 'prettier';
-import { isType } from '../utils.js';
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
+import generate from '@babel/generator';
+import t from '@babel/types';
 
 // 获取当前路径
 const pwd = process.cwd();
@@ -19,70 +22,65 @@ export default async function addTemplateFiles(incs = [], excs = []) {
       : [...config.defaultIgnorePath],
   });
   // 配置文件
-  const cm = await templateConfig();
+  const configFilePath = resolve(pwd, 'template.config.mjs');
+  // 读取配置文件
+  const templateConfig = existsSync(configFilePath)
+    ? (await import(configFilePath)).default
+    : {};
   // 获取需要替换的文件列表
   const renderFiles = await getRenderFiles(
     matchFiles,
-    cm.get('encoding'),
-    cm.get('regExp')
+    templateConfig.encoding ?? 'utf-8',
+    templateConfig.regExp ?? config.templateRegExp
   );
   // 写入配置文件
   if (renderFiles.length) {
-    await cm.set('files', renderFiles);
-  }
-}
-
-/**
- * 管理模版配置
- */
-async function templateConfig() {
-  const filepath = resolve(pwd, 'template.config.mjs');
-  const tmpConfig = existsSync(filepath)
-    ? (await import(filepath)).default
-    : {};
-  return {
-    get(key) {
-      const result = {
-        prompts: tmpConfig.prompts || [],
-        encoding: tmpConfig.encoding || 'utf8',
-        files: tmpConfig.files || [],
-        exts: tmpConfig.exts || [],
-        regExp: tmpConfig.regExp || config.templateRegExp,
-      };
-      return typeof key === 'string' ? result[key] : result;
-    },
-    async set(k, v) {
-      tmpConfig[k] = v;
-      const configString = stringifyWithFunctions(tmpConfig);
-      return writeFile(
-        filepath,
-        prettierFormat(`export default ${configString}`, {
-          parser: 'babel',
-        }),
-        tmpConfig.encoding || 'utf8'
-      );
-    },
-  };
-}
-
-/**
- * 转换对象成字符串
- * @param {unknown} obj
- * @returns
- */
-function stringifyWithFunctions(obj) {
-  if (Array.isArray(obj)) {
-    return `[${obj.map(item => stringifyWithFunctions(item)).join(', ')}]`;
-  } else if (isType(obj, 'object')) {
-    return `{${Object.entries(obj)
-      .map(([key, value]) => `${key}: ${stringifyWithFunctions(value)}`)
-      .join(', ')}}`;
-  } else if (isType(obj, 'function')) {
-    return obj.toString();
-  } else if (isType(obj, 'string')) {
-    return JSON.stringify(obj);
-  } else {
-    return obj;
+    const tmpConfigContent = existsSync(configFilePath)
+      ? await readFile(configFilePath, 'utf-8')
+      : `export default {}`;
+    const ast = parse(tmpConfigContent, {
+      sourceType: 'module',
+    });
+    traverse.default(ast, {
+      enter(path) {
+        if (
+          path.isExportDeclaration() &&
+          path.get('declaration').isObjectExpression()
+        ) {
+          const properties = path.get('declaration.properties');
+          const arrayExpression = t.arrayExpression(
+            renderFiles.map(file => t.stringLiteral(file))
+          );
+          // 遍历，寻找相关属性
+          for (const property of properties) {
+            if (property.get('key').isIdentifier({ name: 'files' })) {
+              property.get('value').replaceWith(arrayExpression);
+              path.stop();
+              return;
+            }
+          }
+          // 如果没有找到就新增
+          const property = t.objectProperty(
+            t.identifier('files'),
+            arrayExpression
+          );
+          path.get('declaration').pushContainer('properties', property);
+          path.stop();
+        }
+      },
+    });
+    const configString = generate.default(ast).code;
+    writeFile(
+      configFilePath,
+      prettierFormat(configString, {
+        parser: 'babel',
+        singleQuote: true,
+        bracketSpacing: true,
+        bracketSameLine: true,
+        arrowParens: 'avoid',
+      }),
+      'utf-8'
+    );
   }
 }
 
